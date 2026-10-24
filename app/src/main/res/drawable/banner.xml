@@ -4,28 +4,28 @@
     android:viewportWidth="320"
     android:viewportHeight="180">
 
-    <!-- Background dark cinema gradient -->
+    <!-- Dark Background -->
     <path
         android:fillColor="#141414"
-        android:pathData="M0,0h320v180h-320z" />
+        android:pathData="M0,0 L320,0 L320,180 L0,180 Z" />
 
-    <!-- Red accent ribbon/polygon -->
+    <!-- Red Accent Triangle -->
     <path
         android:fillColor="#E50914"
-        android:pathData="M0,0 L120,0 L70,180 L0,180 Z" />
+        android:pathData="M0,0 L120,0 L60,180 L0,180 Z" />
 
-    <!-- Film strip icon outline -->
+    <!-- Cinema Card Outline -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M110,65 L110,115 L170,115 L170,65 Z M120,75 L160,75 L160,105 L120,105 Z" />
+        android:fillColor="#242424"
+        android:pathData="M110,50 L270,50 L270,130 L110,130 Z" />
 
-    <!-- Play triangle -->
+    <!-- Red Play Button -->
     <path
         android:fillColor="#E50914"
-        android:pathData="M133,83 L150,90 L133,97 Z" />
+        android:pathData="M135,70 L170,90 L135,110 Z" />
 
-    <!-- Text styling element -->
+    <!-- Decorative Stripes -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M185,73 H250 V80 H185 Z M185,87 H235 V93 H185 Z M185,100 H220 V105 H185 Z" />
+        android:pathData="M185,75 L250,75 L250,82 L185,82 Z M185,90 L240,90 L240,96 L185,96 Z M185,104 L225,104 L225,109 L185,109 Z" />
 </vector>

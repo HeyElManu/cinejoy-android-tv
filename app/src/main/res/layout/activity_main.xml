@@ -51,7 +51,7 @@
         android:paddingTop="8dp"
         android:paddingEnd="16dp"
         android:paddingBottom="8dp"
-        android:text="💡 Touche [MENU] pour options | Flèches &amp; OK pour naviguer"
+        android:text="@string/tv_hint"
         android:textColor="@color/white"
         android:textSize="14sp" />
 

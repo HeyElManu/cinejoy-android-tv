@@ -2,6 +2,7 @@
     <string name="app_name">Cinejoy TV</string>
     <string name="loading_text">Chargement de Cinejoy…</string>
     <string name="home_url">https://cinejoy.pk</string>
+    <string name="tv_hint">💡 Touche [MENU] pour options | Flèches &amp; OK pour naviguer</string>
 
     <!-- OSD Menu Strings -->
     <string name="menu_title">Menu Télécommande</string>
