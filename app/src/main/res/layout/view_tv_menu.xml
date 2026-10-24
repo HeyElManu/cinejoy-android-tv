@@ -25,22 +25,8 @@
         android:layout_marginBottom="8dp"
         android:background="@drawable/btn_selector"
         android:focusable="true"
-        android:nextFocusDown="@id/btnMenuToggleMouse"
-        android:text="🏠 Accueil Cinejoy"
-        android:textColor="@color/white"
-        android:textSize="15sp" />
-
-    <!-- Button: Toggle Mouse Mode / Dpad -->
-    <Button
-        android:id="@+id/btnMenuToggleMouse"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/btn_selector"
-        android:focusable="true"
-        android:nextFocusUp="@id/btnMenuHome"
         android:nextFocusDown="@id/btnMenuReload"
-        android:text="🖱️ Activer Mode Curseur Souris"
+        android:text="🏠 Accueil Cinejoy"
         android:textColor="@color/white"
         android:textSize="15sp" />
 
@@ -52,7 +38,7 @@
         android:layout_marginBottom="8dp"
         android:background="@drawable/btn_selector"
         android:focusable="true"
-        android:nextFocusUp="@id/btnMenuToggleMouse"
+        android:nextFocusUp="@id/btnMenuHome"
         android:nextFocusDown="@id/btnMenuBack"
         android:text="🔄 Rafraîchir la page"
         android:textColor="@color/white"
