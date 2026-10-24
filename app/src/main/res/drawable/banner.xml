@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <!-- Background dark cinema gradient -->
+    <path
+        android:fillColor="#141414"
+        android:pathData="M0,0h320v180h-320z" />
+
+    <!-- Red accent ribbon/polygon -->
+    <path
+        android:fillColor="#E50914"
+        android:pathData="M0,0 L120,0 L70,180 L0,180 Z" />
+
+    <!-- Film strip icon outline -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M110,65 L110,115 L170,115 L170,65 Z M120,75 L160,75 L160,105 L120,105 Z" />
+
+    <!-- Play triangle -->
+    <path
+        android:fillColor="#E50914"
+        android:pathData="M133,83 L150,90 L133,97 Z" />
+
+    <!-- Text styling element -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M185,73 H250 V80 H185 Z M185,87 H235 V93 H185 Z M185,100 H220 V105 H185 Z" />
+</vector>

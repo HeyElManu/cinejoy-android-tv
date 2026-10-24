@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="36dp"
+    android:height="36dp"
+    android:viewportWidth="36"
+    android:viewportHeight="36">
+
+    <!-- Outer translucent circle / target ring -->
+    <path
+        android:fillColor="#80E50914"
+        android:pathData="M18,3 A15,15 0 1,0 18,33 A15,15 0 1,0 18,3 Z" />
+
+    <!-- Inner circle border -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M18,7 A11,11 0 1,0 18,29 A11,11 0 1,0 18,7 Z" />
+
+    <!-- Center bullseye dot -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M18,15 A3,3 0 1,0 18,21 A3,3 0 1,0 18,15 Z" />
+</vector>

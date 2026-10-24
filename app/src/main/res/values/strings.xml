@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Cinejoy TV</string>
+    <string name="loading_text">Chargement de Cinejoy…</string>
+    <string name="home_url">https://cinejoy.pk</string>
+
+    <!-- OSD Menu Strings -->
+    <string name="menu_title">Menu Télécommande</string>
+    <string name="menu_home">Accueil Cinejoy</string>
+    <string name="menu_mouse_mode">Mode Souris Virtuelle</string>
+    <string name="menu_dpad_mode">Mode D-Pad (Focus)</string>
+    <string name="menu_reload">Rafraîchir la page</string>
+    <string name="menu_back">Page Précédente</string>
+    <string name="menu_adblock_on">Bloqueur Pubs : Activé</string>
+    <string name="menu_close">Fermer le menu</string>
+    <string name="menu_exit">Quitter l\'application</string>
+
+    <string name="toast_exit">Appuyez à nouveau sur Retour pour quitter</string>
+    <string name="toast_mouse_enabled">Mode Pointeur Souris activé (utilisez le D-Pad)</string>
+    <string name="toast_dpad_enabled">Mode D-Pad classique activé</string>
+</resources>

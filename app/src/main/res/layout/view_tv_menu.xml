@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/hud_background"
+    android:elevation="12dp"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="@string/menu_title"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <!-- Button: Home -->
+    <Button
+        android:id="@+id/btnMenuHome"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/btn_selector"
+        android:focusable="true"
+        android:nextFocusDown="@id/btnMenuToggleMouse"
+        android:text="🏠 Accueil Cinejoy"
+        android:textColor="@color/white"
+        android:textSize="15sp" />
+
+    <!-- Button: Toggle Mouse Mode / Dpad -->
+    <Button
+        android:id="@+id/btnMenuToggleMouse"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/btn_selector"
+        android:focusable="true"
+        android:nextFocusUp="@id/btnMenuHome"
+        android:nextFocusDown="@id/btnMenuReload"
+        android:text="🖱️ Activer Mode Curseur Souris"
+        android:textColor="@color/white"
+        android:textSize="15sp" />
+
+    <!-- Button: Refresh -->
+    <Button
+        android:id="@+id/btnMenuReload"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/btn_selector"
+        android:focusable="true"
+        android:nextFocusUp="@id/btnMenuToggleMouse"
+        android:nextFocusDown="@id/btnMenuBack"
+        android:text="🔄 Rafraîchir la page"
+        android:textColor="@color/white"
+        android:textSize="15sp" />
+
+    <!-- Button: Go Back -->
+    <Button
+        android:id="@+id/btnMenuBack"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/btn_selector"
+        android:focusable="true"
+        android:nextFocusUp="@id/btnMenuReload"
+        android:nextFocusDown="@id/btnMenuClose"
+        android:text="⬅️ Page précédente"
+        android:textColor="@color/white"
+        android:textSize="15sp" />
+
+    <!-- Button: Close Menu -->
+    <Button
+        android:id="@+id/btnMenuClose"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/btn_selector"
+        android:focusable="true"
+        android:nextFocusUp="@id/btnMenuBack"
+        android:nextFocusDown="@id/btnMenuExit"
+        android:text="✖ Fermer le menu"
+        android:textColor="@color/white"
+        android:textSize="15sp" />
+
+    <!-- Button: Exit App -->
+    <Button
+        android:id="@+id/btnMenuExit"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/btn_selector"
+        android:focusable="true"
+        android:nextFocusUp="@id/btnMenuClose"
+        android:text="🚪 Quitter Cinejoy TV"
+        android:textColor="#FF8888"
+        android:textSize="14sp" />
+
+</LinearLayout>
