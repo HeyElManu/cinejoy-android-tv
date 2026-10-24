@@ -28,7 +28,7 @@
         android:id="@+id/virtualMouseView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone" />
+        android:visibility="visible" />
 
     <!-- Page Loading Indicator -->
     <ProgressBar
@@ -39,27 +39,29 @@
         android:indeterminateTint="@color/primary_accent"
         android:visibility="visible" />
 
-    <!-- On-Screen TV Remote Guide Hint (fades out after 5 seconds) -->
+    <!-- Discreet Mode Indicator Pill (Top Right, fades out automatically) -->
     <TextView
-        android:id="@+id/tvHintText"
+        android:id="@+id/modeIndicatorPill"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="24dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="24dp"
         android:background="@drawable/hud_background"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="8dp"
-        android:text="@string/tv_hint"
+        android:paddingStart="14dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="6dp"
+        android:text="🖱️ Mode Souris Actif"
         android:textColor="@color/white"
-        android:textSize="14sp" />
+        android:textSize="13sp"
+        android:visibility="visible" />
 
     <!-- Remote Control Quick Menu Overlay -->
     <include
         android:id="@+id/tvMenuOverlay"
         layout="@layout/view_tv_menu"
-        android:layout_width="380dp"
+        android:layout_width="400dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:visibility="gone" />

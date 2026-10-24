@@ -55,13 +55,9 @@ object AdBlocker {
         "unpkg.com"
     )
 
-    /**
-     * Determines whether a given URL should be blocked as an ad or unwanted redirect.
-     */
     fun shouldBlockUrl(url: String?): Boolean {
         if (url == null || url.isBlank()) return true
 
-        // Allow data and blob protocols for media player
         if (url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("about:blank")) {
             return false
         }
@@ -74,23 +70,18 @@ object AdBlocker {
 
         val host = uri.host?.lowercase() ?: return true
 
-        // Check if host matches any allowed pattern
         val isAllowed = ALLOWED_DOMAINS.any { allowed -> host.contains(allowed) }
         if (isAllowed) {
-            // Still check for specific ad query or path
             val isKnownAd = BLOCKED_HOST_PATTERNS.any { blocked -> host.contains(blocked) }
             return isKnownAd
         }
 
-        // Check against blocked patterns
         for (pattern in BLOCKED_HOST_PATTERNS) {
             if (host.contains(pattern)) {
                 return true
             }
         }
 
-        // In streaming sites, random new domains opened on click are almost always ads
-        // If not in allowed list and looks like typical spam TLD
         val spamTlds = listOf(".xyz", ".top", ".click", ".link", ".buzz", ".live", ".icu", ".cam")
         if (spamTlds.any { host.endsWith(it) }) {
             return true
@@ -100,70 +91,75 @@ object AdBlocker {
     }
 
     /**
-     * CSS and JavaScript injection to hide overlay ads, anti-adblock banners,
-     * and enlarge interactive buttons for a 10-foot TV experience.
+     * Enhanced CSS & JS injection:
+     * 1. Eliminates overlapping fixed headers, floating notices, and intrusive banners.
+     * 2. Cleans the video player container so controls do not overlap.
+     * 3. Blocks popup windows.
      */
     val TV_INJECTED_CSS_JS: String = """
         (function() {
             try {
-                // 1. Inject anti-ad and TV UI CSS
                 var style = document.getElementById('cinejoy-tv-custom-style');
                 if (!style) {
                     style = document.createElement('style');
                     style.id = 'cinejoy-tv-custom-style';
                     style.innerHTML = `
-                        /* Remove ad banners and popups */
+                        /* 1. Prevent sticky headers and floating bars from overlapping the player */
+                        header, .header, nav, .navbar, .sticky-top, .fixed-top {
+                            position: relative !important;
+                            z-index: 10 !important;
+                        }
+
+                        /* 2. Hide all ads, overlay trackers, and intrusive floating boxes */
                         iframe[id*="ad"], iframe[src*="ad"], iframe[src*="banner"],
                         .ad-container, .advertisement, .ad-banner, .banner-ad,
+                        .alert, .notice-bar, .announcement,
                         div[class*="popup"]:not([class*="modal"]):not([class*="player"]),
                         div[id*="overlay"]:not([id*="player"]):not([class*="video"]),
                         div[style*="z-index: 2147483647"]:not(.jwplayer):not(.video-js),
                         div[style*="z-index: 999999"]:not(.jwplayer):not(.video-js),
-                        #pop-ad, .floating-banner {
+                        #pop-ad, .floating-banner, #cookie-law-info-bar, .cookie-banner {
                             display: none !important;
                             visibility: hidden !important;
                             pointer-events: none !important;
-                            opacity: 0 !important;
-                            width: 0 !important;
                             height: 0 !important;
+                            width: 0 !important;
                         }
 
-                        /* TV 10-foot UI optimizations */
+                        /* 3. Optimize player area so controls are clean and unobstructed */
+                        .player-wrap, .player-container, #player, .play-box, .video-player {
+                            position: relative !important;
+                            z-index: 50 !important;
+                            max-width: 100% !important;
+                            margin: 0 auto !important;
+                        }
+
+                        /* TV dark theme & smooth navigation */
                         html, body {
-                            background-color: #0d0d0d !important;
-                            color: #f1f1f1 !important;
+                            background-color: #0c0c0c !important;
+                            color: #f0f0f0 !important;
                             user-select: none !important;
                             -webkit-user-select: none !important;
-                            scroll-behavior: smooth !important;
                         }
 
-                        /* Highlight focused elements for TV remote D-Pad navigation */
-                        :focus {
+                        /* Focus outline for D-Pad navigation */
+                        a:focus, button:focus, [tabindex]:focus {
                             outline: 3px solid #E50914 !important;
                             outline-offset: 2px !important;
-                            box-shadow: 0 0 12px rgba(229, 9, 20, 0.8) !important;
-                        }
-
-                        /* Ensure video containers fill the display properly */
-                        video {
-                            max-width: 100% !important;
                         }
                     `;
                     document.head.appendChild(style);
                 }
 
-                // 2. Neutralize rogue window.open popup spam
-                window.open = function(url, target, features) {
-                    console.log('CinejoyTV blocked popup window: ' + url);
+                // 4. Block window.open spam
+                window.open = function(url) {
+                    console.log('Blocked popup:', url);
                     return null;
                 };
 
-                // 3. Remove annoying click hijackers
+                // 5. Remove blank target click redirects
                 document.querySelectorAll('a[target="_blank"]').forEach(function(el) {
-                    var href = el.getAttribute('href') || '';
-                    if (href.indexOf('cinejoy') === -1 && href.indexOf('http') === 0) {
-                        el.removeAttribute('target');
-                    }
+                    el.removeAttribute('target');
                 });
             } catch(e) {
                 console.error('Cinejoy TV script error', e);

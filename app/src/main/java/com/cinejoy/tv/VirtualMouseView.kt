@@ -14,8 +14,9 @@ import android.view.View
 import androidx.core.content.ContextCompat
 
 /**
- * Virtual TV mouse pointer overlay that translates TV Remote D-Pad directional
- * presses into smooth screen cursor motion and synthetic click touch events.
+ * High-precision Virtual Mouse Pointer for Android TV.
+ * Translates TV Remote D-Pad directional keys into smooth screen cursor motion
+ * and generates real touch clicks, preventing the video player from hijacking arrow keys.
  */
 class VirtualMouseView @JvmOverloads constructor(
     context: Context,
@@ -26,7 +27,7 @@ class VirtualMouseView @JvmOverloads constructor(
     private var cursorX = 960f
     private var cursorY = 540f
 
-    private val cursorRadius = 18f
+    private val cursorRadius = 16f
     private val paintCircle = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = ContextCompat.getColor(context, R.color.cursor_glow)
         style = Paint.Style.FILL
@@ -42,13 +43,12 @@ class VirtualMouseView @JvmOverloads constructor(
     }
 
     private var targetView: View? = null
-    private var isClickAnimating = false
     private var clickScale = 1.0f
 
     // Motion parameters
-    private val baseStep = 22f
+    private val baseStep = 24f
     private var currentSpeedMultiplier = 1.0f
-    private val maxSpeedMultiplier = 3.5f
+    private val maxSpeedMultiplier = 3.2f
     private var lastDirection: Int = -1
     private var continuousPressCount = 0
 
@@ -60,7 +60,7 @@ class VirtualMouseView @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        if (cursorX == 960f && cursorY == 540f) {
+        if (cursorX == 960f && cursorY == 540f && w > 0 && h > 0) {
             cursorX = w / 2f
             cursorY = h / 2f
         }
@@ -71,17 +71,17 @@ class VirtualMouseView @JvmOverloads constructor(
         if (visibility != VISIBLE) return
 
         val radius = cursorRadius * clickScale
-        // Draw outer translucent glow ring
-        canvas.drawCircle(cursorX, cursorY, radius * 1.5f, paintCircle)
-        // Draw crisp white ring
+        // Outer translucent glow ring
+        canvas.drawCircle(cursorX, cursorY, radius * 1.6f, paintCircle)
+        // White boundary ring
         canvas.drawCircle(cursorX, cursorY, radius, paintRing)
-        // Draw center red pointer dot
+        // Center red bullseye dot
         canvas.drawCircle(cursorX, cursorY, 4f, paintDot)
     }
 
     /**
-     * Handles D-Pad navigation keys when mouse mode is activated.
-     * Returns true if the key was consumed by the virtual mouse.
+     * Intercepts D-Pad keys so that arrow keys move the pointer instead of
+     * altering the video player's volume or seeking the video.
      */
     fun handleRemoteKey(keyCode: Int, event: KeyEvent): Boolean {
         if (visibility != VISIBLE) return false
@@ -94,11 +94,11 @@ class VirtualMouseView @JvmOverloads constructor(
 
         if (event.action != KeyEvent.ACTION_DOWN) return false
 
-        // Acceleration handling
+        // Acceleration on holding button
         if (keyCode == lastDirection) {
             continuousPressCount++
-            if (continuousPressCount > 3) {
-                currentSpeedMultiplier = (1.0f + continuousPressCount * 0.15f).coerceAtMost(maxSpeedMultiplier)
+            if (continuousPressCount > 2) {
+                currentSpeedMultiplier = (1.0f + continuousPressCount * 0.18f).coerceAtMost(maxSpeedMultiplier)
             }
         } else {
             lastDirection = keyCode
@@ -134,16 +134,25 @@ class VirtualMouseView @JvmOverloads constructor(
     }
 
     private fun moveCursor(dx: Float, dy: Float) {
-        cursorX = (cursorX + dx).coerceIn(10f, width.toFloat() - 10f)
-        cursorY = (cursorY + dy).coerceIn(10f, height.toFloat() - 10f)
+        cursorX = (cursorX + dx).coerceIn(12f, width.toFloat() - 12f)
+        cursorY = (cursorY + dy).coerceIn(12f, height.toFloat() - 12f)
 
-        // If cursor hits near top or bottom screen boundaries, auto-scroll the attached WebView
+        // Dispatch hover move to target WebView so interactive buttons react
         val target = targetView
         if (target != null) {
-            if (cursorY <= 30f) {
-                target.scrollBy(0, -60)
-            } else if (cursorY >= height - 30f) {
-                target.scrollBy(0, 60)
+            val now = SystemClock.uptimeMillis()
+            val hoverEvent = MotionEvent.obtain(
+                now, now, MotionEvent.ACTION_HOVER_MOVE,
+                cursorX, cursorY, 0
+            )
+            target.dispatchGenericMotionEvent(hoverEvent)
+            hoverEvent.recycle()
+
+            // Auto-scroll when near top or bottom edges
+            if (cursorY <= 35f) {
+                target.scrollBy(0, -70)
+            } else if (cursorY >= height - 35f) {
+                target.scrollBy(0, 70)
             }
         }
 
@@ -151,15 +160,14 @@ class VirtualMouseView @JvmOverloads constructor(
     }
 
     /**
-     * Dispatches actual touch down and up events to the underlying WebView
-     * exactly at the (cursorX, cursorY) position.
+     * Performs a native touch click at the exact cursor position.
      */
     fun performSyntheticClick() {
         val target = targetView ?: return
 
-        // Click visual ripple animation
-        val anim = ValueAnimator.ofFloat(1.0f, 0.6f, 1.0f).apply {
-            duration = 160
+        // Click animation ripple
+        val anim = ValueAnimator.ofFloat(1.0f, 0.65f, 1.0f).apply {
+            duration = 150
             addUpdateListener {
                 clickScale = it.animatedValue as Float
                 invalidate()
@@ -182,7 +190,7 @@ class VirtualMouseView @JvmOverloads constructor(
         target.dispatchTouchEvent(downEvent)
         downEvent.recycle()
 
-        // 2. Send ACTION_UP after short delay
+        // 2. Send ACTION_UP after 60ms
         mainHandler.postDelayed({
             val upTime = SystemClock.uptimeMillis()
             val upEvent = MotionEvent.obtain(
@@ -195,8 +203,6 @@ class VirtualMouseView @JvmOverloads constructor(
             )
             target.dispatchTouchEvent(upEvent)
             upEvent.recycle()
-        }, 50)
+        }, 60)
     }
-
-    fun getCursorPosition(): Pair<Float, Float> = Pair(cursorX, cursorY)
 }
