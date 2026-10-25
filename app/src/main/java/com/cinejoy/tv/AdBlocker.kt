@@ -4,165 +4,118 @@ import android.net.Uri
 
 object AdBlocker {
 
-    // Common ad, tracking, and popup domains frequently encountered on streaming platforms
     private val BLOCKED_HOST_PATTERNS = listOf(
-        "popads",
-        "popcash",
-        "onclickpredictiv",
-        "adcash",
-        "doubleclick",
-        "google-analytics",
-        "googlesyndication",
-        "adnxs",
-        "propellerads",
-        "histats",
-        "monetag",
-        "outbrain",
-        "taboola",
-        "bet365",
-        "1xbet",
-        "casino",
-        "track",
-        "banner",
-        "juicyads",
-        "exoclick",
-        "trafficjunky",
-        "adsterra",
-        "coinhive",
-        "cryptoloot"
+        "popads", "popcash", "onclickpredictiv", "adcash",
+        "doubleclick", "google-analytics", "googlesyndication", "adnxs",
+        "propellerads", "histats", "monetag", "outbrain", "taboola",
+        "bet365", "1xbet", "casino", "juicyads", "exoclick",
+        "trafficjunky", "adsterra", "coinhive", "cryptoloot"
     )
 
-    // Allowed domains and streaming embed hosts
     private val ALLOWED_DOMAINS = listOf(
-        "cinejoy.pk",
-        "cinejoy.to",
-        "cinejoy.lol",
-        "cinejoy.asia",
-        "cinejoy.ink",
-        "vidsrc",
-        "2embed",
-        "autoembed",
-        "superembed",
-        "rabbitstream",
-        "megacloud",
-        "streamwish",
-        "filemoon",
-        "vidcloud",
-        "tmdb.org",
-        "themoviedb.org",
-        "cloudflare.com",
-        "jsdelivr.net",
-        "unpkg.com"
+        "cinejoy.pk", "cinejoy.to", "cinejoy.lol", "cinejoy.asia", "cinejoy.ink",
+        "vidsrc", "2embed", "autoembed", "superembed", "rabbitstream",
+        "megacloud", "streamwish", "filemoon", "vidcloud",
+        "tmdb.org", "themoviedb.org", "cloudflare.com", "jsdelivr.net", "unpkg.com"
     )
 
     fun shouldBlockUrl(url: String?): Boolean {
         if (url == null || url.isBlank()) return true
-
-        if (url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("about:blank")) {
-            return false
-        }
-
-        val uri = try {
-            Uri.parse(url)
-        } catch (e: Exception) {
-            return true
-        }
-
+        if (url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("about:blank")) return false
+        val uri = try { Uri.parse(url) } catch (e: Exception) { return true }
         val host = uri.host?.lowercase() ?: return true
-
-        val isAllowed = ALLOWED_DOMAINS.any { allowed -> host.contains(allowed) }
-        if (isAllowed) {
-            val isKnownAd = BLOCKED_HOST_PATTERNS.any { blocked -> host.contains(blocked) }
-            return isKnownAd
+        if (ALLOWED_DOMAINS.any { host.contains(it) }) {
+            return BLOCKED_HOST_PATTERNS.any { host.contains(it) }
         }
-
-        for (pattern in BLOCKED_HOST_PATTERNS) {
-            if (host.contains(pattern)) {
-                return true
-            }
-        }
-
+        if (BLOCKED_HOST_PATTERNS.any { host.contains(it) }) return true
         val spamTlds = listOf(".xyz", ".top", ".click", ".link", ".buzz", ".live", ".icu", ".cam")
-        if (spamTlds.any { host.endsWith(it) }) {
-            return true
-        }
-
-        return false
+        return spamTlds.any { host.endsWith(it) }
     }
 
     /**
-     * Enhanced CSS & JS injection:
-     * 1. Eliminates overlapping fixed headers, floating notices, and intrusive banners.
-     * 2. Cleans the video player container so controls do not overlap.
-     * 3. Blocks popup windows.
+     * Script injecté dans chaque page :
+     * 1. Bloque TOUS les événements clavier au niveau JS → le lecteur vidéo
+     *    ne peut plus capturer les flèches pour changer le volume.
+     * 2. Supprime les popups, bannières et overlays publicitaires.
+     * 3. Optimise l'affichage pour un écran TV 1080p.
      */
     val TV_INJECTED_CSS_JS: String = """
         (function() {
             try {
-                var style = document.getElementById('cinejoy-tv-custom-style');
-                if (!style) {
-                    style = document.createElement('style');
-                    style.id = 'cinejoy-tv-custom-style';
-                    style.innerHTML = `
-                        /* 1. Prevent sticky headers and floating bars from overlapping the player */
-                        header, .header, nav, .navbar, .sticky-top, .fixed-top {
-                            position: relative !important;
-                            z-index: 10 !important;
-                        }
+                // ── 1. BLOQUER TOUS LES ÉVÉNEMENTS CLAVIER côté JS ──────────────
+                // Le lecteur vidéo HTML5 (JWPlayer, Plyr, Video.js…) ne recevra
+                // JAMAIS les touches flèches → plus de changement de volume/seek
+                // par le lecteur. Le curseur Android gère tout à la place.
+                ['keydown', 'keyup', 'keypress'].forEach(function(evtType) {
+                    window.addEventListener(evtType, function(e) {
+                        e.stopImmediatePropagation();
+                        e.preventDefault();
+                    }, true);
+                });
 
-                        /* 2. Hide all ads, overlay trackers, and intrusive floating boxes */
-                        iframe[id*="ad"], iframe[src*="ad"], iframe[src*="banner"],
-                        .ad-container, .advertisement, .ad-banner, .banner-ad,
-                        .alert, .notice-bar, .announcement,
-                        div[class*="popup"]:not([class*="modal"]):not([class*="player"]),
-                        div[id*="overlay"]:not([id*="player"]):not([class*="video"]),
-                        div[style*="z-index: 2147483647"]:not(.jwplayer):not(.video-js),
-                        div[style*="z-index: 999999"]:not(.jwplayer):not(.video-js),
-                        #pop-ad, .floating-banner, #cookie-law-info-bar, .cookie-banner {
-                            display: none !important;
-                            visibility: hidden !important;
-                            pointer-events: none !important;
-                            height: 0 !important;
-                            width: 0 !important;
-                        }
+                // Empêche aussi les iframes (lecteurs embarqués) de recevoir les touches
+                document.querySelectorAll('iframe').forEach(function(iframe) {
+                    try {
+                        ['keydown', 'keyup', 'keypress'].forEach(function(evtType) {
+                            iframe.contentWindow.addEventListener(evtType, function(e) {
+                                e.stopImmediatePropagation();
+                                e.preventDefault();
+                            }, true);
+                        });
+                    } catch(ignore) {}
+                });
 
-                        /* 3. Optimize player area so controls are clean and unobstructed */
-                        .player-wrap, .player-container, #player, .play-box, .video-player {
-                            position: relative !important;
-                            z-index: 50 !important;
-                            max-width: 100% !important;
-                            margin: 0 auto !important;
-                        }
+                // Observer pour appliquer le blocage aux iframes chargées dynamiquement
+                var iframeObserver = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(m) {
+                        m.addedNodes.forEach(function(node) {
+                            if (node.tagName === 'IFRAME') {
+                                try {
+                                    ['keydown', 'keyup', 'keypress'].forEach(function(evtType) {
+                                        node.contentWindow.addEventListener(evtType, function(e) {
+                                            e.stopImmediatePropagation();
+                                            e.preventDefault();
+                                        }, true);
+                                    });
+                                } catch(ignore) {}
+                            }
+                        });
+                    });
+                });
+                iframeObserver.observe(document.body, { childList: true, subtree: true });
 
-                        /* TV dark theme & smooth navigation */
-                        html, body {
-                            background-color: #0c0c0c !important;
-                            color: #f0f0f0 !important;
-                            user-select: none !important;
-                            -webkit-user-select: none !important;
-                        }
-
-                        /* Focus outline for D-Pad navigation */
-                        a:focus, button:focus, [tabindex]:focus {
-                            outline: 3px solid #E50914 !important;
-                            outline-offset: 2px !important;
-                        }
-                    `;
-                    document.head.appendChild(style);
-                }
-
-                // 4. Block window.open spam
-                window.open = function(url) {
-                    console.log('Blocked popup:', url);
-                    return null;
-                };
-
-                // 5. Remove blank target click redirects
+                // ── 2. BLOQUER POPUPS & REDIRECTIONS ────────────────────────────
+                window.open = function() { return null; };
                 document.querySelectorAll('a[target="_blank"]').forEach(function(el) {
                     el.removeAttribute('target');
                 });
+
+                // ── 3. CSS TV : SUPPRIMER ADS & OPTIMISER AFFICHAGE ─────────────
+                var style = document.getElementById('cinejoy-tv-style');
+                if (!style) {
+                    style = document.createElement('style');
+                    style.id = 'cinejoy-tv-style';
+                    style.innerHTML = [
+                        /* Masquer bannières pubs et overlays */
+                        'iframe[src*="ad"], .ad-container, .advertisement, .ad-banner,',
+                        'div[class*="popup"]:not([class*="player"]),',
+                        '#pop-ad, .floating-banner, #cookie-law-info-bar { display:none!important; }',
+
+                        /* Éléments fixes / collants qui masquent le lecteur */
+                        'header, .header, nav, .navbar, .sticky-top, .fixed-top {',
+                        '  position: relative!important; z-index: 10!important; }',
+
+                        /* Contenu TV sombre */
+                        'html, body { background:#0d0d0d!important; color:#f0f0f0!important; }',
+
+                        /* Lecteur propre */
+                        '.player-wrap, #player, .video-player { z-index:50!important; }',
+                    ].join(' ');
+                    document.head.appendChild(style);
+                }
+
             } catch(e) {
-                console.error('Cinejoy TV script error', e);
+                console.error('CinejoyTV inject error', e);
             }
         })();
     """.trimIndent()

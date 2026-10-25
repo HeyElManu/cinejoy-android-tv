@@ -51,19 +51,16 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
         val settings = webView.settings
-
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
         settings.databaseEnabled = true
         settings.cacheMode = WebSettings.LOAD_DEFAULT
-
         settings.userAgentString = DESKTOP_TV_USER_AGENT
         settings.useWideViewPort = true
         settings.loadWithOverviewMode = true
         settings.setSupportZoom(false)
         settings.builtInZoomControls = false
         settings.displayZoomControls = false
-
         settings.mediaPlaybackRequiresUserGesture = false
         settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
 
@@ -72,54 +69,50 @@ class MainActivity : AppCompatActivity() {
             customViewContainer = customViewContainer,
             webView = webView,
             progressBar = loadingProgressBar
-        ) { /* fullscreen change – nothing extra needed */ }
+        ) { /* fullscreen callback */ }
         webView.webChromeClient = webChromeClient
 
         webView.webViewClient = TVWebViewClient {
             webView.evaluateJavascript(AdBlocker.TV_INJECTED_CSS_JS, null)
         }
+
+        // Le WebView ne doit JAMAIS prendre le focus clavier — le curseur s'en charge
+        webView.isFocusable = false
+        webView.isFocusableInTouchMode = false
     }
 
-    // ─── Seules 5 touches sont gérées ───────────────────────────────────────
-    // ⬆️ ⬇️ ⬅️ ➡️ → déplace le curseur
-    // ✅ OK  → clic à l'emplacement du curseur
-    // Tout le reste (volume, retour, menu…) est ignoré.
-    // ────────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // dispatchKeyEvent est appelé EN PREMIER, avant onKeyDown et avant que
+    // le système Android TV ou la WebView ne reçoivent quoi que ce soit.
+    // On intercepte ici TOUTES les touches et on ne laisse passer que Back.
+    // ─────────────────────────────────────────────────────────────────────────
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        return when (event.keyCode) {
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        return when (keyCode) {
+            // ⬆️⬇️⬅️➡️ → déplace le curseur, jamais le système
             KeyEvent.KEYCODE_DPAD_UP,
             KeyEvent.KEYCODE_DPAD_DOWN,
             KeyEvent.KEYCODE_DPAD_LEFT,
             KeyEvent.KEYCODE_DPAD_RIGHT,
+            // ✅ OK / Sélection → clic souris
             KeyEvent.KEYCODE_DPAD_CENTER,
             KeyEvent.KEYCODE_ENTER -> {
-                virtualMouseView.handleRemoteKey(keyCode, event)
-                true // consommé : ne passe JAMAIS au lecteur vidéo
+                virtualMouseView.handleRemoteKey(event.keyCode, event)
+                true  // consommé : le système et la WebView ne le voient jamais
             }
+
+            // ⏮ Retour → navigation dans l'historique / quitter
             KeyEvent.KEYCODE_BACK -> {
-                handleBack()
+                if (event.action == KeyEvent.ACTION_UP) handleBack()
                 true
             }
-            else -> true // toutes les autres touches sont silencieusement ignorées
-        }
-    }
 
-    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        return when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP,
-            KeyEvent.KEYCODE_DPAD_DOWN,
-            KeyEvent.KEYCODE_DPAD_LEFT,
-            KeyEvent.KEYCODE_DPAD_RIGHT,
-            KeyEvent.KEYCODE_DPAD_CENTER,
-            KeyEvent.KEYCODE_ENTER -> {
-                virtualMouseView.handleRemoteKey(keyCode, event)
-                true
-            }
+            // Toutes les autres touches (volume, chaîne, menu…) → ignorées
             else -> true
         }
     }
 
+    // On ne garde plus onKeyDown / onKeyUp : dispatchKeyEvent suffit
     private fun handleBack() {
         if (webChromeClient.isFullscreen) {
             webChromeClient.onHideCustomView()
@@ -138,18 +131,7 @@ class MainActivity : AppCompatActivity() {
         mainHandler.postDelayed({ backPressedOnce = false }, 2500)
     }
 
-    override fun onResume() {
-        super.onResume()
-        webView.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        webView.onPause()
-    }
-
-    override fun onDestroy() {
-        webView.destroy()
-        super.onDestroy()
-    }
+    override fun onResume() { super.onResume(); webView.onResume() }
+    override fun onPause()  { super.onPause();  webView.onPause()  }
+    override fun onDestroy(){ webView.destroy(); super.onDestroy() }
 }
