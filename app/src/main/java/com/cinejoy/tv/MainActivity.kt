@@ -8,7 +8,6 @@ import android.view.KeyEvent
 import android.view.View
 import android.webkit.WebSettings
 import android.webkit.WebView
-import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ProgressBar
 import android.widget.Toast
@@ -21,10 +20,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var customViewContainer: FrameLayout
     private lateinit var virtualMouseView: VirtualMouseView
     private lateinit var loadingProgressBar: ProgressBar
-    private lateinit var tvMenuOverlay: View
 
     private lateinit var webChromeClient: TVWebChromeClient
-    private lateinit var webViewClient: TVWebViewClient
 
     private var backPressedOnce = false
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -39,24 +36,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initViews()
-        setupWebView()
-        setupMenuButtons()
-
-        // Load Cinejoy homepage
-        webView.loadUrl(CINEJOY_HOME_URL)
-    }
-
-    private fun initViews() {
         mainRoot = findViewById(R.id.main_root)
         webView = findViewById(R.id.webView)
         customViewContainer = findViewById(R.id.customViewContainer)
         virtualMouseView = findViewById(R.id.virtualMouseView)
         loadingProgressBar = findViewById(R.id.loadingProgressBar)
-        tvMenuOverlay = findViewById(R.id.tvMenuOverlay)
 
         virtualMouseView.attachTargetView(webView)
-        virtualMouseView.visibility = View.VISIBLE
+
+        setupWebView()
+        webView.loadUrl(CINEJOY_HOME_URL)
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -83,84 +72,22 @@ class MainActivity : AppCompatActivity() {
             customViewContainer = customViewContainer,
             webView = webView,
             progressBar = loadingProgressBar
-        ) { isFullscreen ->
-            // Cursor remains permanently available in fullscreen to control playback
-            virtualMouseView.visibility = View.VISIBLE
-        }
+        ) { /* fullscreen change – nothing extra needed */ }
         webView.webChromeClient = webChromeClient
 
-        webViewClient = TVWebViewClient {
+        webView.webViewClient = TVWebViewClient {
             webView.evaluateJavascript(AdBlocker.TV_INJECTED_CSS_JS, null)
         }
-        webView.webViewClient = webViewClient
     }
 
-    private fun setupMenuButtons() {
-        val btnHome = tvMenuOverlay.findViewById<Button>(R.id.btnMenuHome)
-        val btnReload = tvMenuOverlay.findViewById<Button>(R.id.btnMenuReload)
-        val btnBack = tvMenuOverlay.findViewById<Button>(R.id.btnMenuBack)
-        val btnClose = tvMenuOverlay.findViewById<Button>(R.id.btnMenuClose)
-        val btnExit = tvMenuOverlay.findViewById<Button>(R.id.btnMenuExit)
-
-        btnHome.setOnClickListener {
-            toggleMenu(false)
-            webView.loadUrl(CINEJOY_HOME_URL)
-        }
-
-        btnReload.setOnClickListener {
-            toggleMenu(false)
-            webView.reload()
-        }
-
-        btnBack.setOnClickListener {
-            toggleMenu(false)
-            if (webView.canGoBack()) {
-                webView.goBack()
-            }
-        }
-
-        btnClose.setOnClickListener {
-            toggleMenu(false)
-        }
-
-        btnExit.setOnClickListener {
-            finish()
-        }
-    }
-
-    private fun toggleMenu(show: Boolean? = null) {
-        val shouldShow = show ?: (tvMenuOverlay.visibility != View.VISIBLE)
-        if (shouldShow) {
-            tvMenuOverlay.visibility = View.VISIBLE
-            tvMenuOverlay.findViewById<Button>(R.id.btnMenuHome).requestFocus()
-        } else {
-            tvMenuOverlay.visibility = View.GONE
-        }
-    }
-
-    // ==========================================
-    // Remote Control Key Management
-    // Exclusively routes D-Pad to Virtual Mouse
-    // ==========================================
+    // ─── Seules 5 touches sont gérées ───────────────────────────────────────
+    // ⬆️ ⬇️ ⬅️ ➡️ → déplace le curseur
+    // ✅ OK  → clic à l'emplacement du curseur
+    // Tout le reste (volume, retour, menu…) est ignoré.
+    // ────────────────────────────────────────────────────────────────────────
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        // 1. Menu button triggers Quick Menu HUD
-        if (keyCode == KeyEvent.KEYCODE_MENU) {
-            toggleMenu()
-            return true
-        }
-
-        // 2. If Quick Menu is showing, let Android handle D-Pad navigation between buttons
-        if (tvMenuOverlay.visibility == View.VISIBLE) {
-            if (keyCode == KeyEvent.KEYCODE_BACK) {
-                toggleMenu(false)
-                return true
-            }
-            return super.onKeyDown(keyCode, event)
-        }
-
-        // 3. Exclusively handle all D-Pad directional & enter keys via Virtual Mouse
-        when (keyCode) {
+        return when (keyCode) {
             KeyEvent.KEYCODE_DPAD_UP,
             KeyEvent.KEYCODE_DPAD_DOWN,
             KeyEvent.KEYCODE_DPAD_LEFT,
@@ -168,19 +95,18 @@ class MainActivity : AppCompatActivity() {
             KeyEvent.KEYCODE_DPAD_CENTER,
             KeyEvent.KEYCODE_ENTER -> {
                 virtualMouseView.handleRemoteKey(keyCode, event)
-                return true // Strictly consumed: will never reach video player
+                true // consommé : ne passe JAMAIS au lecteur vidéo
             }
+            KeyEvent.KEYCODE_BACK -> {
+                handleBack()
+                true
+            }
+            else -> true // toutes les autres touches sont silencieusement ignorées
         }
-
-        return super.onKeyDown(keyCode, event)
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        if (tvMenuOverlay.visibility == View.VISIBLE) {
-            return super.onKeyUp(keyCode, event)
-        }
-
-        when (keyCode) {
+        return when (keyCode) {
             KeyEvent.KEYCODE_DPAD_UP,
             KeyEvent.KEYCODE_DPAD_DOWN,
             KeyEvent.KEYCODE_DPAD_LEFT,
@@ -188,35 +114,25 @@ class MainActivity : AppCompatActivity() {
             KeyEvent.KEYCODE_DPAD_CENTER,
             KeyEvent.KEYCODE_ENTER -> {
                 virtualMouseView.handleRemoteKey(keyCode, event)
-                return true
+                true
             }
+            else -> true
         }
-
-        return super.onKeyUp(keyCode, event)
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        if (tvMenuOverlay.visibility == View.VISIBLE) {
-            toggleMenu(false)
-            return
-        }
-
+    private fun handleBack() {
         if (webChromeClient.isFullscreen) {
             webChromeClient.onHideCustomView()
             return
         }
-
         if (webView.canGoBack()) {
             webView.goBack()
             return
         }
-
         if (backPressedOnce) {
-            super.onBackPressed()
+            finish()
             return
         }
-
         backPressedOnce = true
         Toast.makeText(this, getString(R.string.toast_exit), Toast.LENGTH_SHORT).show()
         mainHandler.postDelayed({ backPressedOnce = false }, 2500)

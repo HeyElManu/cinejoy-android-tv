@@ -7,7 +7,7 @@
     android:background="@color/bg_dark"
     tools:context=".MainActivity">
 
-    <!-- Primary TV WebView -->
+    <!-- WebView principal -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
@@ -15,7 +15,7 @@
         android:focusable="false"
         android:focusableInTouchMode="false" />
 
-    <!-- Container for Fullscreen Video playback -->
+    <!-- Conteneur plein écran pour la vidéo HTML5 -->
     <FrameLayout
         android:id="@+id/customViewContainer"
         android:layout_width="match_parent"
@@ -23,7 +23,7 @@
         android:background="@color/black"
         android:visibility="gone" />
 
-    <!-- Permanent Virtual Mouse Overlay (draws cursor and dispatches touches) -->
+    <!-- Curseur souris virtuelle (toujours visible) -->
     <com.cinejoy.tv.VirtualMouseView
         android:id="@+id/virtualMouseView"
         android:layout_width="match_parent"
@@ -31,7 +31,7 @@
         android:focusable="false"
         android:visibility="visible" />
 
-    <!-- Page Loading Indicator -->
+    <!-- Indicateur de chargement de page -->
     <ProgressBar
         android:id="@+id/loadingProgressBar"
         android:layout_width="64dp"
@@ -39,14 +39,5 @@
         android:layout_gravity="center"
         android:indeterminateTint="@color/primary_accent"
         android:visibility="visible" />
-
-    <!-- Remote Control Quick Menu Overlay -->
-    <include
-        android:id="@+id/tvMenuOverlay"
-        layout="@layout/view_tv_menu"
-        android:layout_width="380dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
 
 </FrameLayout>
